@@ -5,6 +5,10 @@ from pydantic import BaseModel
 from app.schemas.conteudo import ConteudoOut
 
 
+class PastaUpdate(BaseModel):
+    nome: str
+
+
 class PastaOut(BaseModel):
     id: UUID
     user_id: str

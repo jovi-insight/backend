@@ -65,3 +65,42 @@ async def deletar_materia(materia_id: UUID, db: Session = Depends(get_db)):
 
     db.delete(materia)
     db.commit()
+
+
+@router.put("/{materia_id}", response_model=MateriaOut)
+async def atualizar_materia(
+    materia_id: UUID,
+    body: MateriaCreate,
+    db: Session = Depends(get_db),
+):
+    """Atualiza o nome de uma matéria."""
+
+    # [VALIDAÇÃO] Verifica se o nome está vazio
+    if not body.nome.strip():
+        raise HTTPException(status_code=400, detail="Nome da matéria não pode ser vazio.")
+
+    # [VALIDAÇÃO] Verifica se a matéria existe
+    materia = db.query(Materia).filter(Materia.id == materia_id).first()
+    if not materia:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Matéria com ID {materia_id} não encontrada.",
+        )
+
+    # [VALIDAÇÃO] Verifica duplicidade com outro registro
+    existente = (
+        db.query(Materia)
+        .filter(Materia.nome.ilike(body.nome), Materia.id != materia_id)
+        .first()
+    )
+    if existente:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Matéria '{body.nome}' já existe.",
+        )
+
+    # [MANIPULAÇÃO DE VARIÁVEIS] Atualiza o nome
+    materia.nome = body.nome.strip()
+    db.commit()
+    db.refresh(materia)
+    return materia
