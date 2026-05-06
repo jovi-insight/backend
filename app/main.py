@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 import asyncio
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app.core.database import init_db, SessionLocal
@@ -37,6 +38,15 @@ app = FastAPI(
     description="API de produtividade estudantil",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# [CORS] Permite acesso de qualquer origem (ajustar em produção se necessário)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(ia.router)
