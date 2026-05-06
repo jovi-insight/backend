@@ -1,5 +1,6 @@
 import json
 import base64
+import re
 from groq import Groq
 
 from app.core.config import GROQ_API_KEY
@@ -8,6 +9,37 @@ _client = Groq(api_key=GROQ_API_KEY)
 
 TEXT_MODEL = "llama-3.3-70b-versatile"
 VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+
+def _parse_json(text: str) -> dict:
+    """
+    Faz parse de JSON retornado pela IA, tratando caracteres de controle.
+    [VALIDAÇÃO + DECISÃO] Tenta múltiplas estratégias de parsing.
+    """
+    # Remove blocos markdown se existirem
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+    # Tenta parse direto primeiro
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Remove caracteres de controle (exceto \n e \t) e tenta novamente
+    text_limpo = re.sub(r'[\x00-\x09\x0b\x0c\x0e-\x1f]', '', text)
+
+    try:
+        return json.loads(text_limpo)
+    except json.JSONDecodeError:
+        pass
+
+    # Última tentativa: usa strict=False
+    try:
+        return json.loads(text_limpo, strict=False)
+    except json.JSONDecodeError:
+        # Se nada funcionar, retorna o texto cru como valor
+        return {"raw": text}
 
 
 async def analisar_imagem(image_bytes: bytes, mime_type: str) -> dict:
@@ -41,7 +73,7 @@ async def analisar_imagem(image_bytes: bytes, mime_type: str) -> dict:
     text = response.choices[0].message.content.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    return json.loads(text)
+    return _parse_json(text)
 
 
 async def traduzir_imagem(image_bytes: bytes, mime_type: str) -> str:
@@ -72,9 +104,7 @@ async def traduzir_imagem(image_bytes: bytes, mime_type: str) -> str:
         max_tokens=2048,
     )
     text = response.choices[0].message.content.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    data = json.loads(text)
+    data = _parse_json(text)
     return data.get("traducao", text)
 
 
@@ -97,9 +127,7 @@ async def traduzir_texto(texto: str, idioma_destino: str = "português brasileir
         max_tokens=2048,
     )
     text = response.choices[0].message.content.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    data = json.loads(text)
+    data = _parse_json(text)
     return data.get("traducao", text)
 
 
@@ -109,13 +137,21 @@ async def gerar_resumo(texto: str) -> str:
         model=TEXT_MODEL,
         messages=[
             {
+                "role": "system",
+                "content": (
+                    "You are a study assistant. You MUST reply in the SAME language as the input text. "
+                    "If the text is in English, reply in English. If in Portuguese, reply in Portuguese. "
+                    "Never translate the content to another language."
+                ),
+            },
+            {
                 "role": "user",
                 "content": (
-                    "Você é um assistente de estudos. Gere um resumo claro e estruturado "
-                    "do conteúdo abaixo, destacando os pontos principais em tópicos. "
-                    "Responda APENAS com JSON válido no formato: "
+                    "Generate a clear and structured summary of the content below, "
+                    "highlighting the main points as bullet items. "
+                    "Reply ONLY with valid JSON in the format: "
                     '{"resumo": "..."}\n\n'
-                    f"Conteúdo: {texto}"
+                    f"Content: {texto}"
                 ),
             }
         ],
@@ -123,7 +159,5 @@ async def gerar_resumo(texto: str) -> str:
         max_tokens=2048,
     )
     text = response.choices[0].message.content.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    data = json.loads(text)
+    data = _parse_json(text)
     return data.get("resumo", text)
