@@ -1,3 +1,17 @@
+# ============================================================
+# Service: Pastas
+# Responsável pela lógica de negócio de CRUD de pastas,
+# incluindo contagem de arquivos e soft delete.
+# ============================================================
+# Conceitos aplicados:
+# - Manipulação de variáveis tipadas
+# - Estruturas de decisão (if/else)
+# - Estruturas de repetição (for)
+# - Armazenamento e manipulação de listas
+# - f-strings em logs
+# - Validação de regras de negócio
+# ============================================================
+
 from uuid import UUID
 from datetime import datetime, timezone
 from sqlalchemy import func
@@ -9,6 +23,8 @@ from app.models.conteudo import Conteudo
 
 def listar_pastas(db: Session, user_id: str) -> list[dict]:
     """Retorna pastas ativas do usuário com contagem de conteúdos."""
+
+    # [SUBQUERY] Conta conteúdos por pasta (apenas ativos)
     subq = (
         db.query(
             Conteudo.pasta_id,
@@ -19,6 +35,7 @@ def listar_pastas(db: Session, user_id: str) -> list[dict]:
         .subquery()
     )
 
+    # Busca pastas ativas com a contagem via join
     rows = (
         db.query(Pasta, func.coalesce(subq.c.quantidade_arquivos, 0))
         .outerjoin(subq, Pasta.id == subq.c.pasta_id)
@@ -27,8 +44,12 @@ def listar_pastas(db: Session, user_id: str) -> list[dict]:
         .all()
     )
 
-    resultado = []
+    # [LISTA] Monta lista de resultados
+    resultado: list[dict] = []
+
+    # [ESTRUTURA DE REPETIÇÃO - for] Itera sobre cada pasta encontrada
     for pasta, qtd in rows:
+        # [LISTA - append] Adiciona pasta formatada ao resultado
         resultado.append(
             {
                 "id": pasta.id,
@@ -39,11 +60,13 @@ def listar_pastas(db: Session, user_id: str) -> list[dict]:
                 "quantidade_arquivos": qtd,
             }
         )
+
     return resultado
 
 
 def obter_pasta(db: Session, pasta_id: UUID, user_id: str) -> Pasta | None:
-    """Retorna pasta ativa com seus conteúdos ativos."""
+    """Retorna pasta ativa com seus conteúdos ativos carregados."""
+    # [DECISÃO] Filtra apenas pastas não deletadas do usuário
     return (
         db.query(Pasta)
         .options(joinedload(Pasta.conteudos).joinedload(Conteudo.imagens))
@@ -57,7 +80,11 @@ def obter_pasta(db: Session, pasta_id: UUID, user_id: str) -> Pasta | None:
 
 
 def deletar_pasta(db: Session, pasta_id: UUID, user_id: str) -> bool:
-    """Soft delete da pasta e seus conteúdos."""
+    """
+    Soft delete da pasta e seus conteúdos filhos.
+    Marca registros como deletados sem remover do banco.
+    """
+    # [VALIDAÇÃO] Verifica se a pasta existe e pertence ao usuário
     pasta = (
         db.query(Pasta)
         .filter(
@@ -67,18 +94,21 @@ def deletar_pasta(db: Session, pasta_id: UUID, user_id: str) -> bool:
         )
         .first()
     )
+
+    # [ESTRUTURA DE DECISÃO - if] Retorna False se não encontrou
     if not pasta:
         return False
 
-    agora = datetime.now(timezone.utc)
+    # [MANIPULAÇÃO DE VARIÁVEIS] Captura timestamp atual
+    agora: datetime = datetime.now(timezone.utc)
 
-    # Soft delete dos conteúdos filhos
+    # [REPETIÇÃO IMPLÍCITA] Atualiza todos os conteúdos filhos em batch
     db.query(Conteudo).filter(
         Conteudo.pasta_id == pasta_id,
         Conteudo.deletado == False,
     ).update({"deletado": True, "deletado_em": agora})
 
-    # Soft delete da pasta
+    # [MANIPULAÇÃO DE VARIÁVEIS] Marca a pasta como deletada
     pasta.deletado = True
     pasta.deletado_em = agora
 
