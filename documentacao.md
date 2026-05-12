@@ -184,3 +184,79 @@ A exclusão de pastas e conteúdos utiliza soft delete — os registros são mar
 - Imagens permanecem no Supabase Storage (sem perda de arquivos)
 
 Todas as queries de listagem filtram automaticamente registros deletados.
+
+### 2.11 Interface de Linha de Comando (CLI)
+
+**Arquivo:** `cli.py`
+
+O projeto inclui um programa interativo de terminal que consome a API REST, permitindo ao usuário acessar todas as funcionalidades via menu de opções. O CLI implementa os seguintes conceitos de programação:
+
+- **Menu de opções** com loop `while True`
+- **Estrutura de decisão** `match-case` para direcionar funcionalidades
+- **Entrada de dados** via `input()` com validação
+- **Saída formatada** com `f-strings`
+- **Manipulação de listas** para exibir matérias, pastas e conteúdos
+- **Repetição** com `for` para iterar sobre resultados da API
+
+**Opções disponíveis no menu:**
+
+| Opção | Funcionalidade |
+|-------|---------------|
+| 1 | Analisar imagem (extrair texto e sugerir matéria) |
+| 2 | Confirmar conteúdo (salvar no sistema) |
+| 3 | Traduzir texto |
+| 4 | Gerar resumo por IA |
+| 5 | Listar matérias |
+| 6 | Listar pastas do usuário |
+| 7 | Ver conteúdos recentes |
+| 0 | Sair |
+
+Cada funcionalidade valida os dados de entrada, chama o endpoint correspondente da API, trata erros de conexão e exibe o resultado formatado ao usuário. Após a execução, o programa retorna automaticamente ao menu principal.
+
+---
+
+## 3. Como Executar o Projeto
+
+### Pré-requisitos
+
+- Python 3.12+
+- PostgreSQL (local via Docker ou remoto)
+- Conta no Supabase (Storage)
+- API Key do Groq (gratuita)
+
+### Passo a passo
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/jovi-insight/backend.git
+cd backend
+
+# 2. Crie e ative o ambiente virtual
+python3.12 -m venv venv
+source venv/bin/activate
+
+# 3. Instale as dependências
+pip install -r requirements.txt
+
+# 4. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas credenciais
+
+# 5. Inicie a API (terminal 1)
+uvicorn app.main:app --reload
+
+# 6. Execute o CLI (terminal 2)
+python3 cli.py
+```
+
+### Execução via Docker
+
+```bash
+docker build -t jovi-app .
+docker run -p 8000:8000 --env-file .env jovi-app
+```
+
+### Documentação interativa
+
+- Swagger UI: http://localhost:8000/docs
+- Scalar: http://localhost:8000/scalar
