@@ -48,7 +48,7 @@ def exibir_erro(response: requests.Response) -> None:
     except Exception:
         erro = response.text
     # [F-STRING] Mensagem de erro formatada
-    print(f"\n❌ Erro ({response.status_code}): {erro}")
+    print(f"\nErro ({response.status_code}): {erro}")
 
 
 # ============================================================
@@ -67,11 +67,11 @@ def analisar_imagem() -> None:
 
     # [VALIDAÇÃO] Verifica se o arquivo existe
     if not caminho:
-        print("❌ Caminho não pode ser vazio.")
+        print("Caminho não pode ser vazio.")
         return
 
     if not os.path.isfile(caminho):
-        print(f"❌ Arquivo não encontrado: {caminho}")
+        print(f"Arquivo não encontrado: {caminho}")
         return
 
     # [VALIDAÇÃO] Verifica extensão do arquivo
@@ -79,11 +79,11 @@ def analisar_imagem() -> None:
     extensao: str = os.path.splitext(caminho)[1].lower()
 
     if extensao not in extensoes_validas:
-        print(f"❌ Extensão '{extensao}' não suportada. Use: {extensoes_validas}")
+        print(f"Extensão '{extensao}' não suportada. Use: {extensoes_validas}")
         return
 
     # [ENTRADA DE DADOS] Envia imagem para a API
-    print("⏳ Enviando imagem para análise...")
+    print("Enviando imagem para análise...")
 
     try:
         with open(caminho, "rb") as arquivo:
@@ -92,7 +92,7 @@ def analisar_imagem() -> None:
                 files={"imagem": (os.path.basename(caminho), arquivo)},
             )
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     # [DECISÃO] Verifica se a requisição foi bem-sucedida
@@ -107,11 +107,11 @@ def analisar_imagem() -> None:
     cache_id: str = dados.get("cache_id", "")
 
     # [SAÍDA DE DADOS - f-string] Exibe resultados
-    print(f"\n✅ Análise concluída!")
-    print(f"📝 Texto extraído: {texto_extraido[:200]}...")
-    print(f"📚 Matéria sugerida (ID): {materia_id}")
-    print(f"🔑 Cache ID (use na opção 2): {cache_id}")
-    print(f"⏰ A imagem ficará em cache por 5 minutos.")
+    print(f"\nAnálise concluída!")
+    print(f"Texto extraído: {texto_extraido[:200]}...")
+    print(f"Matéria sugerida (ID): {materia_id}")
+    print(f"Cache ID (use na opção 2): {cache_id}")
+    print(f"A imagem ficará em cache por 5 minutos.")
 
 
 def confirmar_conteudo() -> None:
@@ -124,21 +124,21 @@ def confirmar_conteudo() -> None:
     # [ENTRADA DE DADOS] Solicita dados necessários
     cache_id: str = input("Cache ID (da análise anterior): ").strip()
     if not cache_id:
-        print("❌ Cache ID é obrigatório.")
+        print("Cache ID é obrigatório.")
         return
 
     id_materia: str = input("ID da matéria: ").strip()
     if not id_materia:
-        print("❌ ID da matéria é obrigatório.")
+        print("ID da matéria é obrigatório.")
         return
 
     texto_extraido: str = input("Texto extraído (ou cole o da análise): ").strip()
     if not texto_extraido:
-        print("❌ Texto extraído é obrigatório.")
+        print("Texto extraído é obrigatório.")
         return
 
     # [ENTRADA DE DADOS] Envia para a API
-    print("⏳ Confirmando conteúdo...")
+    print("Confirmando conteúdo...")
 
     try:
         response = requests.post(
@@ -150,7 +150,7 @@ def confirmar_conteudo() -> None:
             },
         )
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -167,7 +167,7 @@ def confirmar_conteudo() -> None:
     # [LISTA + REPETIÇÃO] Exibe imagens vinculadas
     imagens: list[dict] = dados.get("imagens", [])
     if imagens:
-        print("🖼️  Imagens:")
+        print("Imagens:")
         for img in imagens:
             print(f"   - {img.get('url_storage')}")
 
@@ -181,7 +181,7 @@ def traduzir_texto() -> None:
     # [ENTRADA DE DADOS] Solicita texto e idioma
     texto: str = input("Texto para traduzir: ").strip()
     if not texto:
-        print("❌ Texto não pode ser vazio.")
+        print("Texto não pode ser vazio.")
         return
 
     idioma: str = input("Idioma destino (padrão: português brasileiro): ").strip()
@@ -197,7 +197,7 @@ def traduzir_texto() -> None:
             json={"texto": texto, "idioma_destino": idioma},
         )
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -207,7 +207,7 @@ def traduzir_texto() -> None:
 
     # [SAÍDA - f-string]
     traducao: str = response.json().get("traducao", "")
-    print(f"\n✅ Tradução ({idioma}):")
+    print(f"\nTradução ({idioma}):")
     print(f"   {traducao}")
 
 
@@ -220,7 +220,7 @@ def gerar_resumo() -> None:
     # [ENTRADA DE DADOS]
     conteudo_id: str = input("ID do conteúdo: ").strip()
     if not conteudo_id:
-        print("❌ ID do conteúdo é obrigatório.")
+        print("ID do conteúdo é obrigatório.")
         return
 
     print("⏳ Gerando resumo...")
@@ -231,7 +231,7 @@ def gerar_resumo() -> None:
             json={"conteudo_id": conteudo_id},
         )
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     # [DECISÃO]
@@ -241,7 +241,7 @@ def gerar_resumo() -> None:
 
     # [SAÍDA - f-string]
     resumo: str = response.json().get("resumo", "")
-    print(f"\n✅ Resumo gerado:")
+    print(f"\nResumo gerado:")
     print(f"   {resumo}")
 
 
@@ -254,7 +254,7 @@ def listar_materias() -> None:
     try:
         response = requests.get(f"{API_URL}/materias")
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     if response.status_code != 200:
@@ -287,7 +287,7 @@ def listar_pastas() -> None:
     try:
         response = requests.get(f"{API_URL}/pastas")
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     if response.status_code != 200:
@@ -323,7 +323,7 @@ def ver_recentes() -> None:
     try:
         response = requests.get(f"{API_URL}/dashboard/recentes")
     except requests.ConnectionError:
-        print(f"❌ Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {API_URL}")
         return
 
     if response.status_code != 200:
@@ -345,7 +345,7 @@ def ver_recentes() -> None:
         imagem: str = conteudo.get("imagem_url") or "Sem imagem"
         conteudo_id: str = conteudo.get("id", "")
 
-        print(f"\n📄 [{i}] ID: {conteudo_id}")
+        print(f"\n[{i}] ID: {conteudo_id}")
         print(f"   Texto: {texto}...")
         print(f"   Resumo: {resumo[:60]}...")
         print(f"   Imagem: {imagem}")
@@ -363,8 +363,8 @@ def main() -> None:
     Implementa o loop do menu com estrutura de repetição (while)
     e estrutura de decisão (match-case).
     """
-    print("\n🎓 Bem-vindo ao JOVI!")
-    print(f"📡 Conectando à API em: {API_URL}")
+    print("\n Bem-vindo ao JOVI!")
+    print(f" Conectando à API em: {API_URL}")
 
     # [ESTRUTURA DE REPETIÇÃO - while] Loop principal do menu
     while True:
@@ -391,11 +391,11 @@ def main() -> None:
                 ver_recentes()
             case "0":
                 # [SAÍDA] Encerra o programa
-                print("\n👋 Até logo! Bons estudos!")
+                print("\n Até logo! Bons estudos!")
                 break
             case _:
                 # [VALIDAÇÃO] Opção inválida
-                print(f"\n⚠️  Opção '{opcao}' inválida. Escolha de 0 a 7.")
+                print(f"\n  Opção '{opcao}' inválida. Escolha de 0 a 7.")
 
 
 # Ponto de entrada do programa
