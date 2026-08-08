@@ -13,3 +13,5 @@ SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
 SUPABASE_BUCKET: str = os.getenv("SUPABASE_BUCKET", "imagens")
 
 GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+
+GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
