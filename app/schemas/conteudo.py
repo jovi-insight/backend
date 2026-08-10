@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.schemas.imagem import ImagemOut
+from app.schemas.video import VideoYoutubeCreate, VideoYoutubeOut
 
 
 class ConteudoConfirmarRequest(BaseModel):
@@ -19,6 +20,7 @@ class ConteudoOut(BaseModel):
     resumo_ia: str | None = None
     ultima_atualizacao: datetime | None = None
     imagens: list[ImagemOut] = []
+    videos: list[VideoYoutubeOut] = []
 
     model_config = {"from_attributes": True}
 
