@@ -20,6 +20,7 @@ from app.models.pasta import Pasta
 from app.models.conteudo import Conteudo
 from app.models.imagens import Imagem
 from app.models.materia import Materia
+from app.models.videos import VideoYoutube
 
 
 def criar_conteudo_com_imagem(
@@ -28,6 +29,7 @@ def criar_conteudo_com_imagem(
     id_materia: UUID,
     texto_extraido: str,
     url_imagem: str,
+    videos: list[dict] | None = None,
 ) -> Conteudo:
     """
     Cria pasta (se não existir), conteúdo e vincula a imagem.
@@ -66,6 +68,16 @@ def criar_conteudo_com_imagem(
     # [MANIPULAÇÃO DE VARIÁVEIS] Vincula a imagem ao conteúdo
     imagem = Imagem(id_conteudo=conteudo.id, url_storage=url_imagem)
     db.add(imagem)
+
+    # [LISTA + REPETIÇÃO] Vincula vídeos do YouTube ao conteúdo
+    if videos:
+        for video_data in videos:
+            video = VideoYoutube(
+                id_conteudo=conteudo.id,
+                url=video_data.get("url", ""),
+                titulo=video_data.get("titulo"),
+            )
+            db.add(video)
 
     db.commit()
     db.refresh(conteudo)

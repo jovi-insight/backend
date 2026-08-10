@@ -28,3 +28,4 @@ class Conteudo(Base):
     imagens = relationship("Imagem", back_populates="conteudo", cascade="all, delete-orphan")
     audios = relationship("Audio", back_populates="conteudo", cascade="all, delete-orphan")
     termos_chave = relationship("TermoChave", back_populates="conteudo", cascade="all, delete-orphan")
+    videos = relationship("VideoYoutube", back_populates="conteudo", cascade="all, delete-orphan")

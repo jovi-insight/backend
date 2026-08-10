@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.pasta import Pasta
 from app.models.conteudo import Conteudo
+from app.models.videos import VideoYoutube  # noqa: F401
 
 
 def listar_pastas(db: Session, user_id: str) -> list[dict]:
@@ -69,7 +70,10 @@ def obter_pasta(db: Session, pasta_id: UUID, user_id: str) -> Pasta | None:
     # [DECISÃO] Filtra apenas pastas não deletadas do usuário
     return (
         db.query(Pasta)
-        .options(joinedload(Pasta.conteudos).joinedload(Conteudo.imagens))
+        .options(
+            joinedload(Pasta.conteudos).joinedload(Conteudo.imagens),
+            joinedload(Pasta.conteudos).joinedload(Conteudo.videos),
+        )
         .filter(
             Pasta.id == pasta_id,
             Pasta.user_id == user_id,

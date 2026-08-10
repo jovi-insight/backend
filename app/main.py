@@ -22,12 +22,26 @@ async def _limpar_cache_periodicamente():
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Inicializa recursos no startup e libera no shutdown."""
-    init_db()
-    db = SessionLocal()
+    import os
+    skip_init = os.getenv("SKIP_INIT_DB", "false").lower() == "true"
+
     try:
-        seed_materias(db)
-    finally:
-        db.close()
+        if not skip_init:
+            init_db()
+            print("✅ Tabelas criadas/verificadas.")
+        else:
+            print("⏭️  SKIP_INIT_DB=true — pulando create_all (tabelas já existem).")
+
+        db = SessionLocal()
+        try:
+            seed_materias(db)
+        finally:
+            db.close()
+        print("✅ Banco conectado com sucesso.")
+    except Exception as e:
+        print(f"⚠️  Erro no startup do banco: {e}")
+        print("   A API vai subir, mas o banco pode não estar acessível.")
+
     task = asyncio.create_task(_limpar_cache_periodicamente())
     yield
     task.cancel()
