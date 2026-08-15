@@ -5,5 +5,9 @@ psycopg2-binary==2.9.10
 python-dotenv==1.1.0
 python-multipart==0.0.20
 supabase==2.13.0
+groq==0.25.0
 google-genai==1.14.0
+google-api-python-client==2.153.0
+google-auth==2.36.0
+google-auth-oauthlib==1.2.1
 pydantic==2.11.3

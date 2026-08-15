@@ -22,7 +22,7 @@ from app.schemas.ia import (
     ResumoRequest,
     ResumoResponse,
 )
-from app.services import gemini_service
+from app.services import gemini_service, drive_service
 from app.models.materia import Materia
 from app.models.conteudo import Conteudo
 from app.core.database import get_db
@@ -155,5 +155,19 @@ async def gerar_resumo(
     # [MANIPULAÇÃO DE VARIÁVEIS] Salva o resumo no banco
     conteudo.resumo_ia = resumo
     db.commit()
+
+    # Atualiza o TXT no Google Drive (se configurado)
+    if drive_service.is_configured():
+        try:
+            from app.models.pasta import Pasta
+            pasta = db.query(Pasta).filter(Pasta.id == conteudo.pasta_id).first()
+            nome_materia = pasta.nome if pasta else "Geral"
+            await drive_service.atualizar_resumo_drive(
+                nome_materia=nome_materia,
+                texto_extraido=conteudo.extracao_original,
+                resumo=resumo,
+            )
+        except Exception:
+            pass  # Best-effort, não bloqueia a resposta
 
     return ResumoResponse(resumo=resumo)
