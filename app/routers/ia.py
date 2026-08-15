@@ -25,7 +25,7 @@ from app.schemas.ia import (
     NarrarRequest,
 )
 
-from app.services import gemini_service, drive_service
+from app.services import gemini_service, drive_service, elevenlabs_service
 from app.models.materia import Materia
 from app.models.conteudo import Conteudo
 from app.core.database import get_db
