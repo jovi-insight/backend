@@ -27,3 +27,8 @@ class ResumoRequest(BaseModel):
 
 class ResumoResponse(BaseModel):
     resumo: str
+
+
+class NarrarRequest(BaseModel):
+    texto: str
+    idioma: str = "pt"  # código ISO 639-1: pt, en, es, fr, de...
