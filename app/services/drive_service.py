@@ -6,6 +6,7 @@
 
 import io
 import os
+import json
 import uuid
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -20,6 +21,9 @@ SCOPES = ["https://www.googleapis.com/auth/drive"]
 TOKEN_PATH = os.path.join(os.path.dirname(__file__), "../../token.json")
 TOKEN_PATH = os.path.abspath(TOKEN_PATH)
 
+# Variável de ambiente alternativa (pro Render e outros deploys)
+GOOGLE_DRIVE_TOKEN_JSON = os.getenv("GOOGLE_DRIVE_TOKEN_JSON", "")
+
 
 def _get_service():
     """Inicializa o cliente do Google Drive usando OAuth2 token."""
@@ -27,19 +31,28 @@ def _get_service():
     if _service is not None:
         return _service
 
-    if not os.path.exists(TOKEN_PATH):
+    creds = None
+
+    # Prioridade 1: variável de ambiente (produção/Render)
+    if GOOGLE_DRIVE_TOKEN_JSON:
+        token_data = json.loads(GOOGLE_DRIVE_TOKEN_JSON)
+        creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+    # Prioridade 2: arquivo local (desenvolvimento)
+    elif os.path.exists(TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+
+    if not creds:
         return None
 
-    creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
-
     # Renova o token se expirou
-    if creds and creds.expired and creds.refresh_token:
+    if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        # Salva o token atualizado
-        with open(TOKEN_PATH, "w") as f:
-            f.write(creds.to_json())
+        # Salva atualização no arquivo local (se existir)
+        if os.path.exists(TOKEN_PATH):
+            with open(TOKEN_PATH, "w") as f:
+                f.write(creds.to_json())
 
-    if not creds or not creds.valid:
+    if not creds.valid:
         return None
 
     _service = build("drive", "v3", credentials=creds)
