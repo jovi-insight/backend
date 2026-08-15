@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+google-drive-credentials.json
+oauth-credentials.json
+token.json

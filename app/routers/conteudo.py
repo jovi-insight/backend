@@ -8,7 +8,7 @@ from app.core import cache
 from app.schemas.conteudo import ConteudoOut, ConteudoConfirmarRequest
 from app.models.materia import Materia
 from app.models.conteudo import Conteudo
-from app.services import storage_service, conteudo_service, gemini_service
+from app.services import storage_service, conteudo_service, gemini_service, drive_service
 
 router = APIRouter(prefix="/conteudo", tags=["Conteúdo"])
 
@@ -46,10 +46,10 @@ async def confirmar_conteudo(
 ):
     """
     Confirma conteúdo analisado:
-    1. Recupera imagem do cache (enviada no /analisar-imagem)
+    1. Recupera imagem do cache
     2. Upload pro Supabase Storage
-    3. Pede à IA recomendações de vídeos do YouTube
-    4. Cria Pasta (se necessário), Conteudo, Imagem e Vídeos no banco
+    3. Upload pro Google Drive (imagem + texto)
+    4. Cria Pasta, Conteudo, Imagem e Vídeos no banco
     """
     # Recupera imagem do cache
     entry = cache.obter(body.cache_id)
@@ -69,20 +69,29 @@ async def confirmar_conteudo(
             entry.file_bytes, entry.content_type, materia.nome
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Erro no upload: {e}")
+        raise HTTPException(status_code=502, detail=f"Erro no upload Supabase: {e}")
 
-    # Remove do cache após upload bem-sucedido
+    # Upload automático pro Google Drive (se configurado)
+    if drive_service.is_configured():
+        try:
+            await drive_service.upload_para_drive(
+                nome_materia=materia.nome,
+                image_bytes=entry.file_bytes,
+                content_type=entry.content_type,
+                texto_extraido=body.texto_extraido,
+                resumo=None,
+            )
+        except Exception:
+            pass  # Drive é best-effort, não bloqueia a confirmação
+
+    # Remove do cache após uploads
     cache.remover(body.cache_id)
 
     # Pede à IA recomendações de vídeos do YouTube
     try:
         videos = await gemini_service.recomendar_videos(body.texto_extraido, materia.nome)
-        print(f"🎬 Vídeos recomendados: {videos}")
-    except Exception as e:
-        import traceback
-        print(f"⚠️  Erro ao buscar vídeos: {e}")
-        traceback.print_exc()
-        videos = []  # Se falhar, salva sem vídeos
+    except Exception:
+        videos = []
 
     conteudo = conteudo_service.criar_conteudo_com_imagem(
         db=db,
