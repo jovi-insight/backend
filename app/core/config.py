@@ -17,5 +17,9 @@ GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 # Google Gemini
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
+# ElevenLabs (Text-to-Speech)
+ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
+
 # Google Drive (OAuth2 - roda auth_drive.py uma vez pra gerar token.json)
 GOOGLE_DRIVE_FOLDER_ID: str = os.getenv("GOOGLE_DRIVE_FOLDER_ID", "")
