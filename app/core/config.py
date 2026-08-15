@@ -15,3 +15,7 @@ SUPABASE_BUCKET: str = os.getenv("SUPABASE_BUCKET", "imagens")
 GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
+ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
+# Voz "premade" multilíngue (plano free não pode usar vozes da library).
+ELEVENLABS_VOICE_ID: str = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
