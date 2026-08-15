@@ -11,6 +11,7 @@
 # ============================================================
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 import uuid as uuid_mod
 
@@ -21,7 +22,9 @@ from app.schemas.ia import (
     TraduzirTextoResponse,
     ResumoRequest,
     ResumoResponse,
+    NarrarRequest,
 )
+
 from app.services import gemini_service, drive_service
 from app.models.materia import Materia
 from app.models.conteudo import Conteudo
@@ -171,3 +174,32 @@ async def gerar_resumo(
             pass  # Best-effort, não bloqueia a resposta
 
     return ResumoResponse(resumo=resumo)
+
+
+@router.post(
+    "/narrar",
+    responses={200: {"content": {"audio/mpeg": {}}}},
+    response_class=Response,
+)
+async def narrar(body: NarrarRequest):
+    """Converte texto em áudio (MP3) via ElevenLabs, no idioma escolhido."""
+
+    # [VALIDAÇÃO] Texto não pode estar vazio
+    if not body.texto.strip():
+        raise HTTPException(status_code=400, detail="O texto não pode estar vazio.")
+
+    # [VALIDAÇÃO] Idioma precisa ser um código ISO de 2 letras (pt, en, es...)
+    idioma: str = body.idioma.strip().lower()[:2]
+    if not idioma.isalpha() or len(idioma) != 2:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Idioma inválido: {body.idioma}. Use o código ISO (ex.: pt, en, es).",
+        )
+
+    try:
+        audio: bytes = await elevenlabs_service.narrar(body.texto, idioma)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Erro ao gerar narração: {e}")
+
+    # [SAÍDA DE DADOS] Devolve o MP3 direto para o navegador tocar
+    return Response(content=audio, media_type="audio/mpeg")
