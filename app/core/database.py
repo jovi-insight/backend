@@ -19,7 +19,7 @@ Base = declarative_base()
 
 def init_db() -> None:
     """Cria todas as tabelas no banco de dados."""
-    from app.models import materia, pasta, conteudo, imagens, audio, termos_chave, videos  # noqa: F401
+    from app.models import materia, pasta, conteudo, imagens, audio, termos_chave, videos, quiz  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
 
