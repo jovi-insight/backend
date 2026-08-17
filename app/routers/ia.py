@@ -13,6 +13,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
+from uuid import UUID
 import uuid as uuid_mod
 
 from app.schemas.ia import (
@@ -28,6 +29,8 @@ from app.schemas.ia import (
 from app.services import gemini_service, drive_service, elevenlabs_service
 from app.models.materia import Materia
 from app.models.conteudo import Conteudo
+from app.models.quiz import Quiz
+from app.schemas.quiz import GerarQuizRequest, GerarQuizResponse, QuizOut
 from app.core.database import get_db
 from app.core import cache
 
@@ -203,3 +206,93 @@ async def narrar(body: NarrarRequest):
 
     # [SAÍDA DE DADOS] Devolve o MP3 direto para o navegador tocar
     return Response(content=audio, media_type="audio/mpeg")
+
+
+@router.post("/quiz", response_model=GerarQuizResponse)
+async def gerar_quiz(
+    body: GerarQuizRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Gera um quiz com perguntas de múltipla escolha baseado no conteúdo.
+    Salva as perguntas no banco e retorna o quiz completo.
+    """
+    # [VALIDAÇÃO] Verifica se o conteúdo existe
+    conteudo = db.query(Conteudo).filter(Conteudo.id == body.conteudo_id).first()
+    if not conteudo:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Conteúdo com ID {body.conteudo_id} não encontrado.",
+        )
+
+    if not conteudo.extracao_original:
+        raise HTTPException(
+            status_code=400,
+            detail="Conteúdo não possui texto para gerar quiz.",
+        )
+
+    # [VALIDAÇÃO] Limita número de perguntas
+    num = min(max(body.num_perguntas, 1), 10)
+
+    # Gera as perguntas via IA
+    try:
+        perguntas_ia = await gemini_service.gerar_quiz(conteudo.extracao_original, num)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Erro ao gerar quiz: {e}")
+
+    if not perguntas_ia:
+        raise HTTPException(status_code=502, detail="IA não retornou perguntas válidas.")
+
+    # Salva no banco
+    quizzes_salvos = []
+    for p in perguntas_ia:
+        quiz = Quiz(
+            id_conteudo=body.conteudo_id,
+            pergunta=p.get("pergunta", ""),
+            alternativa_a=p.get("alternativa_a", ""),
+            alternativa_b=p.get("alternativa_b", ""),
+            alternativa_c=p.get("alternativa_c", ""),
+            alternativa_d=p.get("alternativa_d", ""),
+            resposta_correta=p.get("resposta_correta", "a").lower()[:1],
+            explicacao=p.get("explicacao"),
+        )
+        db.add(quiz)
+        db.flush()
+        quizzes_salvos.append(quiz)
+
+    db.commit()
+
+    # Refresh pra pegar os IDs gerados
+    for q in quizzes_salvos:
+        db.refresh(q)
+
+    return GerarQuizResponse(
+        conteudo_id=body.conteudo_id,
+        perguntas=[QuizOut.model_validate(q) for q in quizzes_salvos],
+    )
+
+
+@router.get("/quiz/{conteudo_id}", response_model=GerarQuizResponse)
+async def obter_quiz(
+    conteudo_id: UUID,
+    db: Session = Depends(get_db),
+):
+    """Retorna o quiz salvo de um conteúdo (se existir)."""
+    conteudo = db.query(Conteudo).filter(Conteudo.id == conteudo_id).first()
+    if not conteudo:
+        raise HTTPException(status_code=404, detail="Conteúdo não encontrado.")
+
+    quizzes = (
+        db.query(Quiz)
+        .filter(Quiz.id_conteudo == conteudo_id)
+        .order_by(Quiz.criado_em.desc())
+        .all()
+    )
+
+    if not quizzes:
+        raise HTTPException(status_code=404, detail="Nenhum quiz encontrado para este conteúdo.")
+
+    return GerarQuizResponse(
+        conteudo_id=conteudo_id,
+        perguntas=[QuizOut.model_validate(q) for q in quizzes],
+    )

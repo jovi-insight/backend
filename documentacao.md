@@ -260,3 +260,57 @@ docker run -p 8000:8000 --env-file .env jovi-app
 
 - Swagger UI: http://localhost:8000/docs
 - Scalar: http://localhost:8000/scalar
+
+
+### 2.12 Narração por IA (ElevenLabs)
+
+**Endpoint:** `POST /ia/narrar`
+
+Converte qualquer texto em áudio MP3 usando a API da ElevenLabs. O usuário pode escolher o idioma via código ISO (pt, en, es, fr, etc). Útil para estudantes que preferem ouvir o conteúdo ou que possuem dificuldades de leitura.
+
+- Entrada: texto + idioma
+- Saída: arquivo MP3 direto no response (stream de áudio)
+- Limite de 2500 caracteres por narração (proteção de quota)
+
+### 2.13 Integração com Google Drive
+
+**Automático no endpoint:** `POST /conteudo/confirmar`
+
+Ao confirmar um conteúdo, o sistema automaticamente faz upload para o Google Drive do usuário:
+- A imagem original do caderno/quadro
+- Um arquivo `.txt` com o texto extraído
+
+Quando o resumo é gerado via `POST /ia/resumo`, o arquivo `.txt` no Drive é atualizado automaticamente com o resumo incluso.
+
+A organização no Drive espelha a estrutura de matérias:
+```
+JOVI/
+├── História/
+│   ├── conteudo_abc123.jpg
+│   └── resumo_def456.txt
+├── Química/
+│   ├── conteudo_789xyz.jpg
+│   └── resumo_012uvw.txt
+```
+
+**Autenticação:** OAuth2 com refresh token. O token é gerado uma vez via `auth_drive.py` e se renova automaticamente.
+
+### 2.14 Quiz por IA
+
+**Endpoints:**
+- `POST /ia/quiz` — Gera quiz de múltipla escolha baseado no conteúdo
+- `GET /ia/quiz/{conteudo_id}` — Retorna quiz já salvo
+
+O sistema gera de 1 a 10 perguntas com 4 alternativas cada, incluindo a resposta correta e uma explicação. O quiz é salvo no banco e pode ser consultado posteriormente sem necessidade de regeneração.
+
+Estrutura de cada pergunta:
+- Pergunta
+- 4 alternativas (a, b, c, d)
+- Resposta correta
+- Explicação da resposta
+
+### 2.15 Recomendação de Vídeos do YouTube
+
+**Automático no endpoint:** `POST /conteudo/confirmar`
+
+Ao confirmar um conteúdo, a IA analisa o texto extraído e gera termos de busca otimizados para encontrar vídeo-aulas relevantes no YouTube. Os links de busca são salvos junto ao conteúdo, priorizando canais educativos brasileiros (Me Salva, Descomplica, Professor Ferretto, etc).

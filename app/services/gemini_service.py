@@ -221,3 +221,36 @@ async def recomendar_videos(texto: str, materia: str) -> list[dict]:
         })
 
     return videos
+
+
+async def gerar_quiz(texto: str, num_perguntas: int = 5) -> list[dict]:
+    """
+    Gera perguntas de quiz com 4 alternativas baseado no conteúdo.
+    Retorna lista de dicts com pergunta, alternativas, resposta e explicação.
+    """
+    response = _client.models.generate_content(
+        model=MODEL,
+        contents=[
+            types.Content(
+                parts=[
+                    types.Part.from_text(text=
+                        f"Com base no conteúdo acadêmico abaixo, gere exatamente {num_perguntas} "
+                        "perguntas de quiz com 4 alternativas (a, b, c, d). "
+                        "Responda NO MESMO IDIOMA do conteúdo. "
+                        "Responda APENAS com JSON válido no formato:\n"
+                        '{"perguntas": [{"pergunta": "...", "alternativa_a": "...", '
+                        '"alternativa_b": "...", "alternativa_c": "...", "alternativa_d": "...", '
+                        '"resposta_correta": "a", "explicacao": "..."}]}\n\n'
+                        f"Conteúdo: {texto[:3000]}"
+                    ),
+                ]
+            )
+        ],
+        config=types.GenerateContentConfig(
+            temperature=0.4,
+            max_output_tokens=4096,
+        ),
+    )
+    text = response.text.strip()
+    data = _parse_json(text)
+    return data.get("perguntas", [])

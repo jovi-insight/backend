@@ -109,7 +109,12 @@ JOVI_API_URL=https://sua-api.onrender.com python3 cli.py
 | `SUPABASE_URL` | URL do projeto Supabase (`https://xxx.supabase.co`) |
 | `SUPABASE_KEY` | Chave `service_role` do Supabase |
 | `SUPABASE_BUCKET` | Nome do bucket no Supabase Storage |
-| `GROQ_API_KEY` | API Key do Groq |
+| `GROQ_API_KEY` | API Key do Groq (se usar Groq) |
+| `GEMINI_API_KEY` | API Key do Google Gemini |
+| `ELEVENLABS_API_KEY` | API Key do ElevenLabs (narração) |
+| `ELEVENLABS_VOICE_ID` | ID da voz (padrão: Sarah) |
+| `GOOGLE_DRIVE_FOLDER_ID` | ID da pasta raiz no Google Drive |
+| `GOOGLE_DRIVE_TOKEN_JSON` | Conteúdo do token.json (para produção/Render) |
 
 ## Documentação Interativa
 
@@ -126,7 +131,11 @@ JOVI_API_URL=https://sua-api.onrender.com python3 cli.py
 | POST | `/ia/traduzir-imagem` | Envia imagem → traduz conteúdo para pt-BR |
 | POST | `/ia/traduzir-texto` | Envia texto → traduz para idioma destino |
 | POST | `/ia/resumo` | Gera resumo por IA de um conteúdo salvo |
-| POST | `/conteudo/confirmar` | Confirma conteúdo (usa cache_id, sem reenviar imagem) |
+| POST | `/ia/narrar` | Converte texto em áudio MP3 (ElevenLabs) |
+| POST | `/ia/quiz` | Gera quiz de múltipla escolha sobre um conteúdo |
+| GET | `/ia/quiz/{conteudo_id}` | Retorna quiz já salvo |
+| POST | `/conteudo/confirmar` | Confirma conteúdo (Supabase + Drive + vídeos) |
+| GET | `/conteudo/{id}` | Retorna conteúdo com imagens e vídeos |
 | GET | `/dashboard/recentes` | 4 conteúdos mais recentes do usuário |
 | GET | `/materias` | Lista todas as matérias |
 | POST | `/materias` | Cria nova matéria |
