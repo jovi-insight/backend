@@ -32,7 +32,12 @@ API_URL = os.getenv("JOVI_API_URL", "http://localhost:8000")
 # ============================================================
 
 def exibir_menu() -> str:
-    """Exibe o menu principal do programa."""
+    """
+    Exibe o menu principal e recebe a opção escolhida.
+
+    Returns:
+        str: Opção digitada pelo usuário sem espaços nas extremidades.
+    """
     print("\n" + "=" * 50)
     print("       JOVI - Produtividade Estudantil")
     print("=" * 50)
@@ -49,7 +54,12 @@ def exibir_menu() -> str:
 
 
 def exibir_erro(response: requests.Response) -> None:
-    """Exibe mensagem de erro da API formatada."""
+    """
+    Exibe uma mensagem de erro retornada pela API.
+
+    Args:
+        response (requests.Response): Resposta HTTP recebida da API.
+    """
     try:
         erro = response.json().get("detail", "Erro desconhecido")
     except Exception:
@@ -64,8 +74,13 @@ def exibir_erro(response: requests.Response) -> None:
 
 def analisar_imagem(api_url: str) -> None:
     """
-    Opção 1: Envia uma imagem para a IA extrair texto e sugerir matéria.
-    Salva a imagem em cache por 5 minutos para confirmação posterior.
+    Envia uma imagem para a IA extrair o texto e sugerir uma matéria.
+
+    A imagem fica armazenada em cache por 5 minutos para permitir
+    a confirmação posterior.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Analisar Imagem ---")
 
@@ -123,8 +138,12 @@ def analisar_imagem(api_url: str) -> None:
 
 def confirmar_conteudo(api_url: str) -> None:
     """
-    Opção 2: Confirma o conteúdo analisado, salvando no sistema.
-    Usa o cache_id da análise anterior.
+    Confirma e salva no sistema um conteúdo analisado anteriormente.
+
+    Utiliza o cache_id retornado durante a análise da imagem.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Confirmar Conteúdo ---")
 
@@ -181,7 +200,10 @@ def confirmar_conteudo(api_url: str) -> None:
 
 def traduzir_texto(api_url: str) -> None:
     """
-    Opção 3: Traduz um texto para o idioma desejado.
+    Traduz um texto para o idioma escolhido pelo usuário.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Traduzir Texto ---")
 
@@ -220,7 +242,10 @@ def traduzir_texto(api_url: str) -> None:
 
 def gerar_resumo(api_url: str) -> None:
     """
-    Opção 4: Gera um resumo por IA de um conteúdo salvo.
+    Gera um resumo por IA para um conteúdo salvo no sistema.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Gerar Resumo por IA ---")
 
@@ -254,7 +279,10 @@ def gerar_resumo(api_url: str) -> None:
 
 def listar_materias(api_url: str) -> None:
     """
-    Opção 5: Lista todas as matérias cadastradas.
+    Consulta e exibe as matérias cadastradas no sistema.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Matérias Cadastradas ---")
 
@@ -287,7 +315,10 @@ def listar_materias(api_url: str) -> None:
 
 def listar_pastas(api_url: str) -> None:
     """
-    Opção 6: Lista as pastas do usuário com contagem de arquivos.
+    Consulta e exibe as pastas do usuário e suas quantidades de arquivos.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Pastas do Usuário ---")
 
@@ -323,7 +354,10 @@ def listar_pastas(api_url: str) -> None:
 
 def ver_recentes(api_url: str) -> None:
     """
-    Opção 7: Exibe os 4 conteúdos mais recentes do usuário.
+    Consulta e exibe os quatro conteúdos mais recentes do usuário.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Conteúdos Recentes ---")
 
