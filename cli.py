@@ -15,7 +15,13 @@
 # ============================================================
 
 import os
-import requests
+
+try:
+    import requests
+except ModuleNotFoundError:
+    print("Erro: a biblioteca 'requests' não está instalada.")
+    print("Instale com: python -m pip install -r requirements-cli.txt")
+    raise SystemExit(1)
 
 # [VARIÁVEL] URL base da API (pode ser local ou remota)
 API_URL = os.getenv("JOVI_API_URL", "http://localhost:8000")
@@ -366,6 +372,7 @@ def main() -> None:
     """
     print("\n Bem-vindo ao JOVI!")
     print(f" Conectando à API em: {API_URL}")
+    print(" Para utilizar as funcionalidades, a API precisa estar rodando.")
 
     # [ESTRUTURA DE REPETIÇÃO - while] Loop principal do menu
     while True:
