@@ -15,7 +15,13 @@
 # ============================================================
 
 import os
-import requests
+
+try:
+    import requests
+except ModuleNotFoundError:
+    print("Erro: a biblioteca 'requests' não está instalada.")
+    print("Instale com: python -m pip install -r requirements-cli.txt")
+    raise SystemExit(1)
 
 # [VARIÁVEL] URL base da API (pode ser local ou remota)
 API_URL = os.getenv("JOVI_API_URL", "http://localhost:8000")
@@ -25,8 +31,13 @@ API_URL = os.getenv("JOVI_API_URL", "http://localhost:8000")
 # FUNÇÕES AUXILIARES
 # ============================================================
 
-def exibir_menu() -> None:
-    """Exibe o menu principal do programa."""
+def exibir_menu() -> str:
+    """
+    Exibe o menu principal e recebe a opção escolhida.
+
+    Returns:
+        str: Opção digitada pelo usuário sem espaços nas extremidades.
+    """
     print("\n" + "=" * 50)
     print("       JOVI - Produtividade Estudantil")
     print("=" * 50)
@@ -39,10 +50,16 @@ def exibir_menu() -> None:
     print("7. Ver conteúdos recentes")
     print("0. Sair")
     print("-" * 50)
+    return input("Escolha uma opção: ").strip()
 
 
 def exibir_erro(response: requests.Response) -> None:
-    """Exibe mensagem de erro da API formatada."""
+    """
+    Exibe uma mensagem de erro retornada pela API.
+
+    Args:
+        response (requests.Response): Resposta HTTP recebida da API.
+    """
     try:
         erro = response.json().get("detail", "Erro desconhecido")
     except Exception:
@@ -55,10 +72,15 @@ def exibir_erro(response: requests.Response) -> None:
 # FUNCIONALIDADES
 # ============================================================
 
-def analisar_imagem() -> None:
+def analisar_imagem(api_url: str) -> None:
     """
-    Opção 1: Envia uma imagem para a IA extrair texto e sugerir matéria.
-    Salva a imagem em cache por 5 minutos para confirmação posterior.
+    Envia uma imagem para a IA extrair o texto e sugerir uma matéria.
+
+    A imagem fica armazenada em cache por 5 minutos para permitir
+    a confirmação posterior.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Analisar Imagem ---")
 
@@ -88,11 +110,11 @@ def analisar_imagem() -> None:
     try:
         with open(caminho, "rb") as arquivo:
             response = requests.post(
-                f"{API_URL}/ia/analisar-imagem",
+                f"{api_url}/ia/analisar-imagem",
                 files={"imagem": (os.path.basename(caminho), arquivo)},
             )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica se a requisição foi bem-sucedida
@@ -114,10 +136,14 @@ def analisar_imagem() -> None:
     print(f"A imagem ficará em cache por 5 minutos.")
 
 
-def confirmar_conteudo() -> None:
+def confirmar_conteudo(api_url: str) -> None:
     """
-    Opção 2: Confirma o conteúdo analisado, salvando no sistema.
-    Usa o cache_id da análise anterior.
+    Confirma e salva no sistema um conteúdo analisado anteriormente.
+
+    Utiliza o cache_id retornado durante a análise da imagem.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Confirmar Conteúdo ---")
 
@@ -142,7 +168,7 @@ def confirmar_conteudo() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/conteudo/confirmar",
+            f"{api_url}/conteudo/confirmar",
             json={
                 "cache_id": cache_id,
                 "id_materia": id_materia,
@@ -150,7 +176,7 @@ def confirmar_conteudo() -> None:
             },
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -172,9 +198,12 @@ def confirmar_conteudo() -> None:
             print(f"   - {img.get('url_storage')}")
 
 
-def traduzir_texto() -> None:
+def traduzir_texto(api_url: str) -> None:
     """
-    Opção 3: Traduz um texto para o idioma desejado.
+    Traduz um texto para o idioma escolhido pelo usuário.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Traduzir Texto ---")
 
@@ -193,11 +222,11 @@ def traduzir_texto() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/ia/traduzir-texto",
+            f"{api_url}/ia/traduzir-texto",
             json={"texto": texto, "idioma_destino": idioma},
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -211,9 +240,12 @@ def traduzir_texto() -> None:
     print(f"   {traducao}")
 
 
-def gerar_resumo() -> None:
+def gerar_resumo(api_url: str) -> None:
     """
-    Opção 4: Gera um resumo por IA de um conteúdo salvo.
+    Gera um resumo por IA para um conteúdo salvo no sistema.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Gerar Resumo por IA ---")
 
@@ -227,11 +259,11 @@ def gerar_resumo() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/ia/resumo",
+            f"{api_url}/ia/resumo",
             json={"conteudo_id": conteudo_id},
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO]
@@ -245,16 +277,19 @@ def gerar_resumo() -> None:
     print(f"   {resumo}")
 
 
-def listar_materias() -> None:
+def listar_materias(api_url: str) -> None:
     """
-    Opção 5: Lista todas as matérias cadastradas.
+    Consulta e exibe as matérias cadastradas no sistema.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Matérias Cadastradas ---")
 
     try:
-        response = requests.get(f"{API_URL}/materias")
+        response = requests.get(f"{api_url}/materias")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -278,16 +313,19 @@ def listar_materias() -> None:
     print(f"\nTotal: {len(materias)} matérias")
 
 
-def listar_pastas() -> None:
+def listar_pastas(api_url: str) -> None:
     """
-    Opção 6: Lista as pastas do usuário com contagem de arquivos.
+    Consulta e exibe as pastas do usuário e suas quantidades de arquivos.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Pastas do Usuário ---")
 
     try:
-        response = requests.get(f"{API_URL}/pastas")
+        response = requests.get(f"{api_url}/pastas")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -314,16 +352,19 @@ def listar_pastas() -> None:
     print(f"\nTotal: {len(pastas)} pastas")
 
 
-def ver_recentes() -> None:
+def ver_recentes(api_url: str) -> None:
     """
-    Opção 7: Exibe os 4 conteúdos mais recentes do usuário.
+    Consulta e exibe os quatro conteúdos mais recentes do usuário.
+
+    Args:
+        api_url (str): URL base da API JOVI.
     """
     print("\n--- Conteúdos Recentes ---")
 
     try:
-        response = requests.get(f"{API_URL}/dashboard/recentes")
+        response = requests.get(f"{api_url}/dashboard/recentes")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -365,30 +406,30 @@ def main() -> None:
     """
     print("\n Bem-vindo ao JOVI!")
     print(f" Conectando à API em: {API_URL}")
+    print(" Para utilizar as funcionalidades, a API precisa estar rodando.")
 
     # [ESTRUTURA DE REPETIÇÃO - while] Loop principal do menu
     while True:
-        exibir_menu()
 
         # [ENTRADA DE DADOS] Lê opção do usuário
-        opcao: str = input("Escolha uma opção: ").strip()
+        opcao: str = exibir_menu()
 
         # [ESTRUTURA DE DECISÃO - match-case] Direciona para a funcionalidade
         match opcao:
             case "1":
-                analisar_imagem()
+                analisar_imagem(API_URL)
             case "2":
-                confirmar_conteudo()
+                confirmar_conteudo(API_URL)
             case "3":
-                traduzir_texto()
+                traduzir_texto(API_URL)
             case "4":
-                gerar_resumo()
+                gerar_resumo(API_URL)
             case "5":
-                listar_materias()
+                listar_materias(API_URL)
             case "6":
-                listar_pastas()
+                listar_pastas(API_URL)
             case "7":
-                ver_recentes()
+                ver_recentes(API_URL)
             case "0":
                 # [SAÍDA] Encerra o programa
                 print("\n Até logo! Bons estudos!")
