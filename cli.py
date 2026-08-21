@@ -56,7 +56,7 @@ def exibir_erro(response: requests.Response) -> None:
 # FUNCIONALIDADES
 # ============================================================
 
-def analisar_imagem() -> None:
+def analisar_imagem(api_url: str) -> None:
     """
     Opção 1: Envia uma imagem para a IA extrair texto e sugerir matéria.
     Salva a imagem em cache por 5 minutos para confirmação posterior.
@@ -89,11 +89,11 @@ def analisar_imagem() -> None:
     try:
         with open(caminho, "rb") as arquivo:
             response = requests.post(
-                f"{API_URL}/ia/analisar-imagem",
+                f"{api_url}/ia/analisar-imagem",
                 files={"imagem": (os.path.basename(caminho), arquivo)},
             )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica se a requisição foi bem-sucedida
@@ -115,7 +115,7 @@ def analisar_imagem() -> None:
     print(f"A imagem ficará em cache por 5 minutos.")
 
 
-def confirmar_conteudo() -> None:
+def confirmar_conteudo(api_url: str) -> None:
     """
     Opção 2: Confirma o conteúdo analisado, salvando no sistema.
     Usa o cache_id da análise anterior.
@@ -143,7 +143,7 @@ def confirmar_conteudo() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/conteudo/confirmar",
+            f"{api_url}/conteudo/confirmar",
             json={
                 "cache_id": cache_id,
                 "id_materia": id_materia,
@@ -151,7 +151,7 @@ def confirmar_conteudo() -> None:
             },
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -173,7 +173,7 @@ def confirmar_conteudo() -> None:
             print(f"   - {img.get('url_storage')}")
 
 
-def traduzir_texto() -> None:
+def traduzir_texto(api_url: str) -> None:
     """
     Opção 3: Traduz um texto para o idioma desejado.
     """
@@ -194,11 +194,11 @@ def traduzir_texto() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/ia/traduzir-texto",
+            f"{api_url}/ia/traduzir-texto",
             json={"texto": texto, "idioma_destino": idioma},
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO] Verifica resposta
@@ -212,7 +212,7 @@ def traduzir_texto() -> None:
     print(f"   {traducao}")
 
 
-def gerar_resumo() -> None:
+def gerar_resumo(api_url: str) -> None:
     """
     Opção 4: Gera um resumo por IA de um conteúdo salvo.
     """
@@ -228,11 +228,11 @@ def gerar_resumo() -> None:
 
     try:
         response = requests.post(
-            f"{API_URL}/ia/resumo",
+            f"{api_url}/ia/resumo",
             json={"conteudo_id": conteudo_id},
         )
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     # [DECISÃO]
@@ -246,16 +246,16 @@ def gerar_resumo() -> None:
     print(f"   {resumo}")
 
 
-def listar_materias() -> None:
+def listar_materias(api_url: str) -> None:
     """
     Opção 5: Lista todas as matérias cadastradas.
     """
     print("\n--- Matérias Cadastradas ---")
 
     try:
-        response = requests.get(f"{API_URL}/materias")
+        response = requests.get(f"{api_url}/materias")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -279,16 +279,16 @@ def listar_materias() -> None:
     print(f"\nTotal: {len(materias)} matérias")
 
 
-def listar_pastas() -> None:
+def listar_pastas(api_url: str) -> None:
     """
     Opção 6: Lista as pastas do usuário com contagem de arquivos.
     """
     print("\n--- Pastas do Usuário ---")
 
     try:
-        response = requests.get(f"{API_URL}/pastas")
+        response = requests.get(f"{api_url}/pastas")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -315,16 +315,16 @@ def listar_pastas() -> None:
     print(f"\nTotal: {len(pastas)} pastas")
 
 
-def ver_recentes() -> None:
+def ver_recentes(api_url: str) -> None:
     """
     Opção 7: Exibe os 4 conteúdos mais recentes do usuário.
     """
     print("\n--- Conteúdos Recentes ---")
 
     try:
-        response = requests.get(f"{API_URL}/dashboard/recentes")
+        response = requests.get(f"{api_url}/dashboard/recentes")
     except requests.ConnectionError:
-        print(f"Não foi possível conectar à API em {API_URL}")
+        print(f"Não foi possível conectar à API em {api_url}")
         return
 
     if response.status_code != 200:
@@ -376,19 +376,19 @@ def main() -> None:
         # [ESTRUTURA DE DECISÃO - match-case] Direciona para a funcionalidade
         match opcao:
             case "1":
-                analisar_imagem()
+                analisar_imagem(API_URL)
             case "2":
-                confirmar_conteudo()
+                confirmar_conteudo(API_URL)
             case "3":
-                traduzir_texto()
+                traduzir_texto(API_URL)
             case "4":
-                gerar_resumo()
+                gerar_resumo(API_URL)
             case "5":
-                listar_materias()
+                listar_materias(API_URL)
             case "6":
-                listar_pastas()
+                listar_pastas(API_URL)
             case "7":
-                ver_recentes()
+                ver_recentes(API_URL)
             case "0":
                 # [SAÍDA] Encerra o programa
                 print("\n Até logo! Bons estudos!")
