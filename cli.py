@@ -25,7 +25,7 @@ API_URL = os.getenv("JOVI_API_URL", "http://localhost:8000")
 # FUNÇÕES AUXILIARES
 # ============================================================
 
-def exibir_menu() -> None:
+def exibir_menu() -> str:
     """Exibe o menu principal do programa."""
     print("\n" + "=" * 50)
     print("       JOVI - Produtividade Estudantil")
@@ -39,6 +39,7 @@ def exibir_menu() -> None:
     print("7. Ver conteúdos recentes")
     print("0. Sair")
     print("-" * 50)
+    return input("Escolha uma opção: ").strip()
 
 
 def exibir_erro(response: requests.Response) -> None:
@@ -368,10 +369,9 @@ def main() -> None:
 
     # [ESTRUTURA DE REPETIÇÃO - while] Loop principal do menu
     while True:
-        exibir_menu()
 
         # [ENTRADA DE DADOS] Lê opção do usuário
-        opcao: str = input("Escolha uma opção: ").strip()
+        opcao: str = exibir_menu()
 
         # [ESTRUTURA DE DECISÃO - match-case] Direciona para a funcionalidade
         match opcao:
